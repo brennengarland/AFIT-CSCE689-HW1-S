@@ -1,4 +1,5 @@
 #include "TCPClient.h"
+#include "exceptions.h"
 
 
 /**********************************************************************************************
@@ -25,8 +26,9 @@ TCPClient::~TCPClient() {
  *    Throws: socket_error exception if failed. socket_error is a child class of runtime_error
  **********************************************************************************************/
 
-void TCPClient::connectTo(const char *ip_addr, unsigned short port) {
-
+void TCPClient::connectTo(const char *ip_addr, unsigned short port) 
+{
+    throw socket_error;
 }
 
 /**********************************************************************************************
