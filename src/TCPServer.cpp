@@ -1,5 +1,4 @@
 #include "TCPServer.h"
-#include <sys/socket.h>
 #include <stdexcept>
 #include <netinet/in.h> 
 
@@ -22,7 +21,7 @@ TCPServer::~TCPServer() {
 
 void TCPServer::bindSvr(const char *ip_addr, short unsigned int port) 
 {
-    int server_sock;
+    // int server_sock;
     struct sockaddr_in address;
 
     if((server_sock = socket(AF_INET, SOCK_STREAM, 0)) == 0)
@@ -56,7 +55,9 @@ void TCPServer::bindSvr(const char *ip_addr, short unsigned int port)
  *    Throws: socket_error for recoverable errors, runtime_error for unrecoverable types
  **********************************************************************************************/
 
-void TCPServer::listenSvr() {
+void TCPServer::listenSvr() 
+{
+    if(listen(server_sock, 5) < 0)
 
 }
 

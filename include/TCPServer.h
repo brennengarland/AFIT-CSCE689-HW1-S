@@ -2,6 +2,7 @@
 #define TCPSERVER_H
 
 #include "Server.h"
+#include <sys/socket.h>
 
 class TCPServer : public Server 
 {
@@ -14,7 +15,8 @@ public:
    void shutdown();
 
 private:
- 
+   int server_sock;
+   struct sockaddr_in address;
 
 
 };
