@@ -59,17 +59,38 @@ void TCPClient::connectTo(const char *ip_addr, unsigned short port)
  **********************************************************************************************/
 
 void TCPClient::handleConnection() {
-   std::cout << "Handling connection\n";
-   char greeting[300];
-   int rec_len;
-   if((rec_len = recv(sock_fd, greeting, 300, 0)) <= 0)
-   {
-       throw socket_error("Could not receive");
-   }
-   greeting[rec_len] = '\0';
-   std::cout << "Receive: " << rec_len << " bytes\n";
-   std::cout << "Message: ";
-   std::cout << greeting << "\n";
+    std::cout << "Handling connection\n";
+    char msg[300];
+    int rec_len;
+    bool conn = true;
+    while(conn)
+    {
+        if((rec_len = recv(sock_fd, msg, 300, 0)) <= 0) {throw socket_error("Could not receive");}
+        
+        msg[rec_len] = '\0';
+        std::cout << "Received: " << rec_len << " bytes\n";
+        std::cout << "Message:\n";
+        std::cout << msg << "\n";
+
+        std::cout << "Send Command: ";
+
+        std::string cmd;
+        std::cin >> cmd;
+
+        if(cmd == "exit")
+        {
+            closeConn();
+            conn = false;    
+        }
+        else
+        {   
+            int bytes_sent;
+
+            bytes_sent = send(sock_fd, cmd.c_str(), strlen(cmd.c_str()), 0);
+            std::cout << "Sent: " << bytes_sent << " bytes\n";
+        }
+
+    }
 
 }
 

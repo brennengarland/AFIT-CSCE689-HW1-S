@@ -95,13 +95,13 @@ void TCPServer::listenSvr()
     {
         // Read sock is modified by select so we must reset it each time
         read_sock = all_sock;
-        std::cout << "Server: Looping\n";
+        std::cout << "\nServer: Looping\n";
 
         if(select(max_sock+1, &read_sock, NULL, NULL, NULL) < 0)
         {
             throw socket_error("Select error");
         }
-
+        std::cout << "New Data!\n";
         // Loop through all of our sockets and check which ones have data
         for(int i=0; i <= max_sock; i++)
         {
@@ -120,7 +120,7 @@ void TCPServer::listenSvr()
                     new_sock = new_conn->getSocket();
 
                     if(new_sock > max_sock) {max_sock = new_sock;}
-
+                    FD_SET(new_sock, &all_sock);
                     connections.insert({new_sock, new_conn});
                 }
                 // Data from an existing connection
