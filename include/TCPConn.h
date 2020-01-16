@@ -1,9 +1,12 @@
 #ifndef TCPCONN_H
 #define TCPCONN_H
 
-#include "FileDesc.h"
+#pragma once
 
-const int max_attempts = 2;
+#include <string>
+// #include "FileDesc.h"
+
+// const int max_attempts = 2;
 
 class TCPConn 
 {
@@ -11,10 +14,11 @@ public:
    TCPConn();
    ~TCPConn();
 
-   bool accept(SocketFD &server);
+   bool accept_conn(int server);
 
    int sendText(const char *msg);
    int sendText(const char *msg, int size);
+   int getSocket();
 
    void handleConnection();
    void startAuthentication();
@@ -30,16 +34,16 @@ public:
    void disconnect();
    bool isConnected();
 
-   unsigned long getIPAddr() { return _connfd.getIPAddr(); };
+   // unsigned long getIPAddr() { return _connfd.getIPAddr(); };
 
 private:
 
 
    enum statustype { s_username, s_changepwd, s_confirmpwd, s_passwd, s_menu };
 
-   statustype _status = s_username;
+   // statustype _status = s_username;
 
-   SocketFD _connfd;
+   // SocketFD _connfd;
  
    std::string _username; // The username this connection is associated with
 
@@ -48,6 +52,9 @@ private:
    std::string _newpwd; // Used to store user input for changing passwords
 
    int _pwd_attempts = 0;
+
+   int my_sock = 0;
+
 };
 
 

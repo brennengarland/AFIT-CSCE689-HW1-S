@@ -1,6 +1,8 @@
 #ifndef TCPSERVER_H
 #define TCPSERVER_H
 
+#pragma once
+
 #include "Server.h"
 #include <sys/socket.h>
 
@@ -15,8 +17,8 @@ public:
    void shutdown();
 
 private:
-   int server_sock;
-   struct sockaddr_in address;
+   int listener_sock;
+   // struct sockaddr_in address;
 
 
 };

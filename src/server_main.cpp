@@ -10,6 +10,7 @@
 #include <iostream>
 #include <getopt.h>
 #include "TCPServer.h"
+#include "TCPConn.h"
 
 using namespace std; 
 

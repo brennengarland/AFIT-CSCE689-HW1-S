@@ -1,5 +1,12 @@
 #include "TCPClient.h"
 #include "exceptions.h"
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <iostream>
+#include <netdb.h> 
+#include <stdlib.h>
+#include <string.h>
+#include <arpa/inet.h>
 
 
 /**********************************************************************************************
@@ -8,6 +15,8 @@
  **********************************************************************************************/
 
 TCPClient::TCPClient() {
+    std::cout << "Making Client\n";
+    sock_fd = socket(AF_INET, SOCK_STREAM, 0);
 }
 
 /**********************************************************************************************
@@ -28,7 +37,17 @@ TCPClient::~TCPClient() {
 
 void TCPClient::connectTo(const char *ip_addr, unsigned short port) 
 {
-    throw socket_error;
+    std::cout << "Preparing Connection\n";
+    struct sockaddr_in address;
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = inet_addr(ip_addr);
+    address.sin_port = htons( port );
+    std::cout << "Client: Connecting to server...\n";
+    if(connect(sock_fd, (struct  sockaddr *)&address, sizeof(address)) < 0)
+    {
+        shutdown(sock_fd, 2); 
+        throw socket_error("Connection error");
+    }
 }
 
 /**********************************************************************************************
@@ -40,7 +59,18 @@ void TCPClient::connectTo(const char *ip_addr, unsigned short port)
  **********************************************************************************************/
 
 void TCPClient::handleConnection() {
-   
+   std::cout << "Handling connection\n";
+   char greeting[30];
+   int rec_len;
+   if((rec_len = recv(sock_fd, greeting, 30, 0)) <= 0)
+   {
+       throw socket_error("Could not receive");
+   }
+   greeting[rec_len] = '\0';
+   std::cout << "Receive: " << rec_len << " bytes\n";
+   std::cout << "Message: ";
+   std::cout << greeting << "\n";
+
 }
 
 /**********************************************************************************************
