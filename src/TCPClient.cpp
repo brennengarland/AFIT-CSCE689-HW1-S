@@ -60,9 +60,9 @@ void TCPClient::connectTo(const char *ip_addr, unsigned short port)
 
 void TCPClient::handleConnection() {
    std::cout << "Handling connection\n";
-   char greeting[30];
+   char greeting[300];
    int rec_len;
-   if((rec_len = recv(sock_fd, greeting, 30, 0)) <= 0)
+   if((rec_len = recv(sock_fd, greeting, 300, 0)) <= 0)
    {
        throw socket_error("Could not receive");
    }

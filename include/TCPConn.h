@@ -4,6 +4,7 @@
 #pragma once
 
 #include <string>
+#include <map>
 // #include "FileDesc.h"
 
 // const int max_attempts = 2;
@@ -50,6 +51,18 @@ private:
    std::string _inputbuf;
 
    std::string _newpwd; // Used to store user input for changing passwords
+   std::map<std::string, std::string> menu = 
+   {
+      {"hello", "Receive a greeting"},
+      {"1", ""},
+      {"2", ""},
+      {"3", ""},
+      {"4", ""},
+      {"5", ""},
+      {"passwd", "Change your password"},
+      {"exit", "Disconnect"},
+      {"menu", "Display list of commands"}
+      };
 
    int _pwd_attempts = 0;
 
