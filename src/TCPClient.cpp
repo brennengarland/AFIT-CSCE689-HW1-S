@@ -9,6 +9,12 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 
+/*
+Author: Brennen Garland
+Reference: https://beej.us/guide/bgnet/html, https://www.geeksforgeeks.org/socket-programming-in-cc-handling-multiple-clients-on-server-without-multi-threading/
+*/
+
+
 
 /**********************************************************************************************
  * TCPClient (constructor) - Creates a Stdin file descriptor to simplify handling of user input. 
@@ -17,7 +23,7 @@
 
 TCPClient::TCPClient() {
     std::cout << "Making Client\n";
-    sock_fd = socket(AF_INET, SOCK_STREAM, 0);
+    if((sock_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0){throw socket_error("Failed to get socket");}
 }
 
 /**********************************************************************************************
@@ -67,27 +73,40 @@ void TCPClient::handleConnection() {
     while(conn)
     {
         if((rec_len = recv(sock_fd, msg, 1000, 0)) <= 0) {throw socket_error("Could not receive");}
-        
+        // Add null character to string for security
         msg[rec_len] = '\0';
         // std::cout << "Received: " << rec_len << " bytes\n";
         // std::cout << "Message:\n";
         std::cout << msg << "\n";
-
-        std::cout << "Send Command: ";
-
-        std::string cmd;
-        std::getline(std::cin, cmd);
-
-        if(cmd == "exit")
+        bool cmd_valid = false;
+        while(!cmd_valid)
         {
-            conn = false;    
-        }
-        else
-        {   
-            int bytes_sent;
+            std::cout << "Send Command: " << std::endl;
 
-            bytes_sent = send(sock_fd, cmd.c_str(), strlen(cmd.c_str()), 0);
-            // std::cout << "Sent: " << bytes_sent << " bytes\n";
+            std::string cmd;
+            std::getline(std::cin, cmd);
+            // std::cout <<  "Input: " << cmd << "\n";
+            // std::cout << "Size of Input: " << cmd.length() << std::endl;
+            
+
+            if(cmd == "exit")
+            {
+                conn = false;    
+            } else if(cmd.length() >= 20)
+            {
+                // Server inputs are very small and so anything to larger can be rejected by the client
+                std::cout << "Please enter a valid command. That was for too large!\n";
+            }
+            else
+            {   
+                int bytes_sent;
+
+                bytes_sent = send(sock_fd, cmd.c_str(), strlen(cmd.c_str()), 0);
+                // std::cout << "Sent: " << bytes_sent << " bytes\n";
+                cmd_valid = true;
+
+            }
+            
         }
 
     }

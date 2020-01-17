@@ -14,6 +14,11 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 
+/*
+Author: Brennen Garland
+Reference: https://beej.us/guide/bgnet/html, https://www.geeksforgeeks.org/socket-programming-in-cc-handling-multiple-clients-on-server-without-multi-threading/
+*/
+
 
 TCPServer::TCPServer() {
 
@@ -36,30 +41,31 @@ void TCPServer::bindSvr(const char *ip_addr, short unsigned int port)
     
     struct sockaddr_in address;
     // Create socket to listen for incoming connections
-    if((listener_sock = socket(AF_INET, SOCK_STREAM, 0)) == 0)
+    if((listener_sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
-        throw socket_error("Error: Failed to create socket");
+        // Unrecoverable: if we cannot obtain a socket, we cannot
+        // have a server.
+        throw std::runtime_error("Failed to create socket");
     }
 
     // Set listener to Non-Blocking
     fcntl(listener_sock, F_SETFL, O_NONBLOCK);
 
     int opt = 1;
-    if(setsockopt(listener_sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)))
+    if(setsockopt(listener_sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
     {
-        throw std::runtime_error("Error: Failed to set socket options");
+        throw std::runtime_error("Failed to set socket options");
     }
-
+    // Fill in address details such as port and IP for binding
     address.sin_family = AF_INET;
-    address.sin_addr.s_addr = INADDR_ANY;
+    address.sin_addr.s_addr = inet_addr(ip_addr);
     address.sin_port = htons( port );
     // Bind listener to port
     if(bind(listener_sock, (struct  sockaddr *)&address, sizeof(address)) < 0)
     {
-        std::stringstream error_out;
-        error_out << "Address: " << address.sin_addr.s_addr;
-
-        throw socket_error(error_out.str());
+        // Unrecoverable: if our listener socket does not bind, we do not have
+        // a server.
+        throw std::runtime_error("Binding error");
     }
     
    
@@ -75,20 +81,25 @@ void TCPServer::bindSvr(const char *ip_addr, short unsigned int port)
 
 void TCPServer::listenSvr() 
 {
+    // Two sets are needed, one for all sockets and another that will be modified by the read each time
     fd_set all_sock, read_sock;
+    // Max sock will keep track of the socket range we need to be checking
     int max_sock, new_sock;
+    // This keep tracks of the sockets and their TCPConn objects
     std::map<int, TCPConn*> connections;
 
     // Start listening on one socket
     if(listen(listener_sock, 2) < 0)
     {
-        throw socket_error("Listen Error");
+        // Unrecoverable: a server must be able to listen
+        throw std::runtime_error("Hung Up on Listening");
     }
 
     // std::cout << "Started Listening..\n";
 
     // Add this listener socket to our master list
     FD_SET(listener_sock, &all_sock);
+    // Set as max socket until we find another
     max_sock = listener_sock;
 
     while(true)
@@ -99,12 +110,15 @@ void TCPServer::listenSvr()
 
         if(select(max_sock+1, &read_sock, NULL, NULL, NULL) < 0)
         {
+            // Unrecoverable: if we cannot find the socket, we wont be able
+            // to process any data
             throw socket_error("Select error");
         }
         std::cout << "New Data!\n";
         // Loop through all of our sockets and check which ones have data
         for(int i=0; i <= max_sock; i++)
         {
+            // If this socket is in the set of sockets that has data
             if(FD_ISSET(i, &read_sock))
             {
                 // New connection because the listener socket has data
@@ -114,12 +128,14 @@ void TCPServer::listenSvr()
                     TCPConn* new_conn = new TCPConn();
                     if(new_conn->accept_conn(listener_sock) == false)
                     {
+                        // Recoverable: Sometimes it may not accept a connection
                         throw socket_error("Error: Accepting new Connection");
                     }
 
                     new_sock = new_conn->getSocket();
 
                     if(new_sock > max_sock) {max_sock = new_sock;}
+                    // Add the new socket to our master list
                     FD_SET(new_sock, &all_sock);
                     connections.insert({new_sock, new_conn});
                 }
@@ -127,10 +143,12 @@ void TCPServer::listenSvr()
                 else
                 {
                     std::cout << "Existing Connection\n";
+                    // Loop through our map of sockets and tcpconn objects
                     for(auto const& [key, val] : connections)
                     {
                         if(key == i)
                         {
+                            // If the connection is closed, clear it from our list
                             if(!val->handleConnection())
                             {
                                 FD_CLR(key, &all_sock);
