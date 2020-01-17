@@ -12,6 +12,7 @@
 #include <sys/socket.h>
 #include <netinet/ip.h> 
 #include <arpa/inet.h>
+#include <unistd.h>
 
 
 TCPServer::TCPServer() {
@@ -74,18 +75,17 @@ void TCPServer::bindSvr(const char *ip_addr, short unsigned int port)
 
 void TCPServer::listenSvr() 
 {
-    std::cout << "Entered object\n";
     fd_set all_sock, read_sock;
     int max_sock, new_sock;
     std::map<int, TCPConn*> connections;
 
     // Start listening on one socket
-    if(listen(listener_sock, 3) < 0)
+    if(listen(listener_sock, 2) < 0)
     {
         throw socket_error("Listen Error");
     }
 
-    std::cout << "Started Listening..\n";
+    // std::cout << "Started Listening..\n";
 
     // Add this listener socket to our master list
     FD_SET(listener_sock, &all_sock);
@@ -95,7 +95,7 @@ void TCPServer::listenSvr()
     {
         // Read sock is modified by select so we must reset it each time
         read_sock = all_sock;
-        std::cout << "\nServer: Looping\n";
+        // std::cout << "\nServer: Looping\n";
 
         if(select(max_sock+1, &read_sock, NULL, NULL, NULL) < 0)
         {
@@ -110,7 +110,7 @@ void TCPServer::listenSvr()
                 // New connection because the listener socket has data
                 if(i == listener_sock)
                 {
-                    std::cout << "Server: New Connection!\n";
+                    std::cout << "New Connection!\n";
                     TCPConn* new_conn = new TCPConn();
                     if(new_conn->accept_conn(listener_sock) == false)
                     {
@@ -131,7 +131,10 @@ void TCPServer::listenSvr()
                     {
                         if(key == i)
                         {
-                            val->handleConnection();
+                            if(!val->handleConnection())
+                            {
+                                FD_CLR(key, &all_sock);
+                            }
                         }
                     }
                 }
@@ -149,4 +152,6 @@ void TCPServer::listenSvr()
  **********************************************************************************************/
 
 void TCPServer::shutdown() {
+    
+    close(listener_sock);
 }

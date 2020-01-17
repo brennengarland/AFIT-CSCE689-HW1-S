@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <arpa/inet.h>
+#include <unistd.h>
 
 
 /**********************************************************************************************
@@ -59,27 +60,26 @@ void TCPClient::connectTo(const char *ip_addr, unsigned short port)
  **********************************************************************************************/
 
 void TCPClient::handleConnection() {
-    std::cout << "Handling connection\n";
-    char msg[300];
+    // std::cout << "Handling connection\n";
+    char msg[1000];
     int rec_len;
     bool conn = true;
     while(conn)
     {
-        if((rec_len = recv(sock_fd, msg, 300, 0)) <= 0) {throw socket_error("Could not receive");}
+        if((rec_len = recv(sock_fd, msg, 1000, 0)) <= 0) {throw socket_error("Could not receive");}
         
         msg[rec_len] = '\0';
-        std::cout << "Received: " << rec_len << " bytes\n";
-        std::cout << "Message:\n";
+        // std::cout << "Received: " << rec_len << " bytes\n";
+        // std::cout << "Message:\n";
         std::cout << msg << "\n";
 
         std::cout << "Send Command: ";
 
         std::string cmd;
-        std::cin >> cmd;
+        std::getline(std::cin, cmd);
 
         if(cmd == "exit")
         {
-            closeConn();
             conn = false;    
         }
         else
@@ -87,7 +87,7 @@ void TCPClient::handleConnection() {
             int bytes_sent;
 
             bytes_sent = send(sock_fd, cmd.c_str(), strlen(cmd.c_str()), 0);
-            std::cout << "Sent: " << bytes_sent << " bytes\n";
+            // std::cout << "Sent: " << bytes_sent << " bytes\n";
         }
 
     }
@@ -101,6 +101,7 @@ void TCPClient::handleConnection() {
  **********************************************************************************************/
 
 void TCPClient::closeConn() {
+    close(sock_fd);
 }
 
 
