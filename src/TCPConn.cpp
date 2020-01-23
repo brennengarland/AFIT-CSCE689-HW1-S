@@ -65,74 +65,61 @@ bool TCPConn::handleConnection()
     // Conver to the char array to string for security and ease of use
     std::string msg_str(msg, strlen(msg));
     // std::vector cmds = parseCmd(msg);
-
-    switch (status)
+    cmd_type cmd = cmd_type::unkown;
+    // Loop through our cmd_table to find which command the client sent
+    for(auto const& [key, val] : cmd_table)
     {
-    case statustype::add_user:
-        addUser(msg_str);
-        std::cout << "Changing to password mode!\n";
-        status = statustype::add_pass;
-        break;
-    case statustype::add_pass:
-        addUser(msg_str);
-        status = statustype::cmd;
-        break;
-    default:  
-        // Set default state to unknown
-        cmd_type cmd = cmd_type::unkown;
-        // Loop through our cmd_table to find which command the client sent
-        for(auto const& [key, val] : cmd_table)
-        {
-            // std::cout << "Key: " << key << "\tMsg: " << msg_str << "\n";
-        if(key == msg_str) 
-        {
-            //    std::cout << "Cmd = " << val << "\n";
-            cmd = val;
-            }
+        // std::cout << "Key: " << key << "\tMsg: " << msg_str << "\n";
+    if(key == msg_str) 
+    {
+        //    std::cout << "Cmd = " << val << "\n";
+        cmd = val;
         }
-        switch(cmd)
-        {
-            case cmd_type::greeting:
-                sendText("WHAT IS UP, Welcome to the Server. I hope you will have as much fund as we do.\n");
-                break;
-            case cmd_type::menu:
-                sendMenu();
-                break;
-            case cmd_type::exit:
-                disconnect();
-                break;
-            case cmd_type::password:
-                sendText("Changing Password...\n");
-                changePassword();
-                break;
-            case cmd_type::opt1:
-                cats = true;
-                sendText("Wow! You have signed up for cat facts (provided by factretriever.com). You will receive a cat fact after each command!\nHere is your first cat fact! I hope youre excited, because we are!\n");
-                break;
-            case cmd_type::opt2:
-                dogs = true;
-                sendText("Wow! You have signed up for dog facts (provided by factretriever.com). You will receive a dog fact after each command!\nHere is your first dog fact! I hope you're excited, because we are!\n");
-                break;
-            case cmd_type::opt3:
-                elephants = true;
-                sendText("Wow! You have signed up for elephant facts (provided by factretriever.com). You will receive a elephant fact after each command!\nHere is your first elephant fact! I hope youre excited, because we are!\n");
-                break;
-            case cmd_type::opt4:
-                cats = false;
-                dogs = false;
-                elephants = false;
-                sendText("You've cancelled all of your facts!\n");
-                break;
-            case cmd_type::opt5:
-                addUser();
-                status = statustype::add_user;
-                break;
-            default:
-                sendText("That didn't seem to be on the Menu! Take a gander at what we sent earlier and get back to me.\n");
-                break;
-        }
-        break;
     }
+    switch(cmd)
+    {
+        case cmd_type::greeting:
+            sendText("WHAT IS UP, Welcome to the Server. I hope you will have as much fund as we do.\n");
+            break;
+        case cmd_type::menu:
+            sendMenu();
+            break;
+        case cmd_type::exit:
+            disconnect();
+            break;
+        case cmd_type::password:
+            sendText("Changing Password...\n");
+            changePassword();
+            break;
+        case cmd_type::opt1:
+            cats = true;
+            sendText("Wow! You have signed up for cat facts (provided by factretriever.com). You will receive a cat fact after each command!\nHere is your first cat fact! I hope youre excited, because we are!\n");
+            break;
+        case cmd_type::opt2:
+            dogs = true;
+            sendText("Wow! You have signed up for dog facts (provided by factretriever.com). You will receive a dog fact after each command!\nHere is your first dog fact! I hope you're excited, because we are!\n");
+            break;
+        case cmd_type::opt3:
+            elephants = true;
+            sendText("Wow! You have signed up for elephant facts (provided by factretriever.com). You will receive a elephant fact after each command!\nHere is your first elephant fact! I hope youre excited, because we are!\n");
+            break;
+        case cmd_type::opt4:
+            cats = false;
+            dogs = false;
+            elephants = false;
+            sendText("You've cancelled all of your facts!\n");
+            break;
+        case cmd_type::opt5:
+            cats = true;
+            dogs = true;
+            elephants = true;
+            sendText("All facts are back on!\n");
+            break;
+        default:
+            sendText("That didn't seem to be on the Menu! Take a gander at what we sent earlier and get back to me.\n");
+            break;
+    }
+    
     
     return true;
 
@@ -214,35 +201,3 @@ std::vector<std::string> TCPConn::parseCmd(const std::string msg)
 
     return cmds;
 }
-
-void TCPConn::addUser(std::string data)
-{
-    std::cout << "Status Type: " << status << std::endl;
-    if(status == statustype::cmd)
-    {
-        sendText("Please enter the username for the user you would like to add.\n");
-    } else if(status == statustype::add_user)
-    {   
-        sendText("Please enter password.\n");
-        username = data;
-    } else if(status == statustype::add_pass)
-    {
-        data = hash(data);
-        std::cout << "Storing data!";
-        std::ofstream user_pass("user_info.txt", std::ios_base::app);
-
-        user_pass << username << "," << data << "\n";
-
-        user_pass.close();
-        sendText("User and Password saved!");
-    }
-
-}
-
-
-std::string TCPConn::hash(const std::string& password)
-{
-    std::cout << "Hashing...\n";
-    return password;
-}   
-
